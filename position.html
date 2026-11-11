@@ -5,72 +5,428 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Elysium LP 仓位看板</title>
 <style>
-  :root { --bg:#0b0e13; --card:#141922; --line:#232b38; --txt:#e8edf4; --dim:#8b96a5;
-          --up:#3fb97f; --down:#e05d5d; --accent:#5b8def; }
-  * { box-sizing:border-box; margin:0; padding:0; }
-  body { background:var(--bg); color:var(--txt); font-family:-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;
-         padding:14px; max-width:560px; margin:0 auto; }
-  h1 { font-size:17px; font-weight:600; }
-  .sub { color:var(--dim); font-size:12px; margin-top:3px; }
-  .card { background:var(--card); border:1px solid var(--line); border-radius:12px; padding:14px; margin-top:12px; }
-  .badge { display:inline-block; padding:2px 9px; border-radius:99px; font-size:12px; font-weight:600; }
-  .b-in { background:#123528; color:var(--up); }
-  .b-out { background:#3d1d1d; color:var(--down); }
-  .b-none { background:#2a2f38; color:var(--dim); }
-  .big { font-size:30px; font-weight:700; font-variant-numeric:tabular-nums; margin-top:6px; }
-  .big small { font-size:15px; color:var(--dim); font-weight:500; }
-  .grid { display:grid; grid-template-columns:1fr 1fr; gap:10px 14px; margin-top:12px; }
-  .k { color:var(--dim); font-size:12px; }
-  .v { font-size:16px; font-weight:600; font-variant-numeric:tabular-nums; margin-top:2px; }
-  .v small { font-size:12px; color:var(--dim); font-weight:500; }
-  .up { color:var(--up); } .down { color:var(--down); }
-  .bar { position:relative; height:10px; background:#1d2531; border-radius:99px; margin:22px 4px 6px; }
-  .bar .fill { position:absolute; top:0; bottom:0; border-radius:99px; background:#2c4a7c; }
-  .bar .dot { position:absolute; top:50%; width:16px; height:16px; border-radius:50%; background:var(--accent);
-              border:2px solid #dbe7ff; transform:translate(-50%,-50%); }
-  .barlab { display:flex; justify-content:space-between; color:var(--dim); font-size:11px; font-variant-numeric:tabular-nums; }
-  .row { display:flex; justify-content:space-between; padding:7px 0; border-bottom:1px solid var(--line); font-size:14px; }
-  .row:last-child { border-bottom:none; }
-  .row .rv { font-weight:600; font-variant-numeric:tabular-nums; }
-  .foot { color:var(--dim); font-size:11px; margin-top:12px; line-height:1.6; }
-  .err { color:var(--down); font-size:12px; margin-top:8px; }
+  :root {
+    --bg: #0b0e13;
+    --card: #12161f;
+    --line: #232a38;
+    --txt: #e8ecf3;
+    --dim: #8b94a7;
+    --green: #2fbf71;
+    --red: #e5534b;
+    --amber: #e0a63f;
+    --blue: #4da3ff;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--txt);
+    font-family: -apple-system, "PingFang SC", "Microsoft YaHei", "Segoe UI", Roboto, sans-serif;
+    padding: 16px;
+    max-width: 1060px;
+    margin: 0 auto;
+    line-height: 1.5;
+  }
+
+  /* Header */
+  .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  .h-left h1 {
+    font-size: 20px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    letter-spacing: -0.3px;
+  }
+  .pos-tag {
+    color: var(--blue);
+    font-size: 19px;
+    font-variant-numeric: tabular-nums;
+  }
+  .h-sub {
+    color: var(--dim);
+    font-size: 12.5px;
+    margin-top: 3px;
+  }
+  .top-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 4px 14px;
+    border-radius: 999px;
+    font-size: 13px;
+    font-weight: 600;
+    border: 1px solid var(--line);
+    background: var(--card);
+  }
+  .top-badge.b-in { background: #0e2a1c; color: #b9f4d4; border-color: var(--green); }
+  .top-badge.b-out { background: #2a1512; color: #ffc9c4; border-color: var(--red); }
+  .top-badge.b-none { background: #161b24; color: var(--dim); border-color: var(--line); }
+
+  /* Statusbar */
+  .statusbar {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 10px 16px;
+    font-size: 13.5px;
+    color: var(--dim);
+    flex-wrap: wrap;
+  }
+  .statusbar b { color: var(--txt); font-weight: 600; }
+  .dot {
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    background: var(--green);
+    display: inline-block;
+    margin-right: 6px;
+    box-shadow: 0 0 8px rgba(47, 191, 113, 0.6);
+  }
+  .statusbar.stale .dot {
+    background: var(--red);
+    box-shadow: 0 0 8px rgba(229, 83, 75, 0.6);
+  }
+  .statusbar .right { margin-left: auto; }
+
+  /* Hero Card */
+  .hero {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    margin-top: 14px;
+    padding: 24px 20px 20px;
+    text-align: center;
+    transition: background .3s, border-color .3s;
+  }
+  .hero.in { background: #0e2a1c; border-color: var(--green); }
+  .hero.out { background: #2a1512; border-color: var(--red); }
+  .hero.none { background: #12161f; border-color: var(--line); }
+  .badge {
+    display: inline-block;
+    font-size: 13px;
+    color: var(--dim);
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    padding: 4px 14px;
+    margin-bottom: 8px;
+  }
+  .hero.in .badge { color: #b9f4d4; border-color: var(--green); }
+  .hero.out .badge { color: #ffc9c4; border-color: var(--red); }
+  .hero.none .badge { color: var(--dim); border-color: var(--line); }
+  .bignum {
+    font-size: 72px;
+    font-weight: 800;
+    letter-spacing: -1px;
+    line-height: 1.1;
+    font-variant-numeric: tabular-nums;
+  }
+  .bignum small {
+    font-size: 30px;
+    font-weight: 600;
+    color: var(--dim);
+    margin-left: 4px;
+  }
+  .herolabel {
+    color: var(--dim);
+    font-size: 14.5px;
+    letter-spacing: 2px;
+    margin-top: 4px;
+  }
+  .herosub {
+    display: flex;
+    justify-content: center;
+    gap: 32px;
+    margin-top: 18px;
+    padding-top: 14px;
+    border-top: 1px dashed var(--line);
+    color: var(--dim);
+    font-size: 13px;
+    flex-wrap: wrap;
+  }
+  .herosub b {
+    display: block;
+    color: var(--txt);
+    font-size: 16.5px;
+    margin-top: 3px;
+    font-variant-numeric: tabular-nums;
+  }
+  .pos { color: var(--green); }
+  .neg { color: var(--red); }
+
+  /* Range Card */
+  .rangecard {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    margin-top: 14px;
+    padding: 18px 20px 16px;
+  }
+  .rangecard h3 {
+    font-size: 15.5px;
+    font-weight: 600;
+    margin-bottom: 18px;
+  }
+  .rangecard h3 .tag {
+    float: right;
+    color: var(--dim);
+    font-size: 12px;
+    font-weight: 400;
+    margin-top: 2px;
+  }
+  .track {
+    position: relative;
+    height: 34px;
+    background: #0d1119;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    margin: 18px 8px 8px;
+  }
+  .zone {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    background: rgba(47, 191, 113, 0.18);
+    border-left: 2px solid var(--green);
+    border-right: 2px solid var(--green);
+  }
+  .marker {
+    position: absolute;
+    top: -6px;
+    bottom: -6px;
+    width: 3px;
+    background: var(--blue);
+    border-radius: 2px;
+    z-index: 2;
+  }
+  .marker .tip {
+    position: absolute;
+    top: -26px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #1d2534;
+    border: 1px solid var(--line);
+    color: var(--txt);
+    font-size: 12px;
+    padding: 2px 8px;
+    border-radius: 6px;
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.4);
+  }
+  .scalelabels {
+    display: flex;
+    justify-content: space-between;
+    color: var(--dim);
+    font-size: 12px;
+    margin: 8px 4px 0;
+    font-variant-numeric: tabular-nums;
+  }
+  .distrow {
+    display: flex;
+    gap: 32px;
+    margin-top: 14px;
+    color: var(--dim);
+    font-size: 13px;
+    flex-wrap: wrap;
+    border-top: 1px dashed var(--line);
+    padding-top: 12px;
+  }
+  .distrow b {
+    color: var(--txt);
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Cards Grid */
+  .cards {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+    margin-top: 14px;
+  }
+  .pcard {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 16px 18px;
+  }
+  .pcard h4 {
+    font-size: 15px;
+    font-weight: 600;
+    margin-bottom: 8px;
+  }
+  .pcard h4 .tag {
+    float: right;
+    color: var(--dim);
+    font-size: 12px;
+    font-weight: 400;
+  }
+  .big {
+    font-size: 28px;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+  }
+  .big small {
+    font-size: 14px;
+    color: var(--dim);
+    font-weight: 500;
+  }
+  .sub {
+    color: var(--dim);
+    font-size: 13px;
+    margin: 2px 0 10px;
+  }
+  .row {
+    display: flex;
+    justify-content: space-between;
+    border-top: 1px dashed var(--line);
+    padding: 7px 0;
+    font-size: 13.5px;
+    color: var(--dim);
+  }
+  .row b {
+    color: var(--txt);
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Footer Note */
+  .note {
+    color: var(--dim);
+    font-size: 12.5px;
+    margin-top: 14px;
+    line-height: 1.7;
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 14px 18px;
+  }
+  .note .shells {
+    color: var(--txt);
+    font-weight: 500;
+    margin-bottom: 6px;
+  }
+
+  @media (max-width: 720px) {
+    body { padding: 12px; }
+    .cards { grid-template-columns: 1fr; }
+    .bignum { font-size: 48px; }
+    .bignum small { font-size: 22px; }
+    .herosub { gap: 16px; }
+    .distrow { gap: 14px; }
+    .statusbar { font-size: 12.5px; gap: 10px; }
+    .header { flex-direction: column; align-items: flex-start; }
+    .h-right { margin-top: 4px; }
+  }
 </style>
 </head>
 <body>
-<h1>Elysium LP 仓位看板 <span id="posTitle"></span></h1>
-<div class="sub">自动跟随 LP 热钱包的当前仓位——平仓、新开仓都会自动切换，不用换链接。<br>
-<span id="meta">加载中…</span></div>
 
-<div class="card">
-  <div><span id="statusBadge" class="badge b-none">读取中</span>
-       <span id="rangeTxt" style="color:var(--dim);font-size:12px;margin-left:8px"></span></div>
-  <div class="big"><span id="totalHype">—</span> <small>HYPE ≈ </small><span id="totalUsd">—</span></div>
-  <div class="grid">
-    <div><div class="k">浮盈亏（对入场市值）</div><div class="v" id="pnl">—</div></div>
-    <div><div class="k">未领手续费</div><div class="v" id="fees">—</div></div>
-    <div><div class="k">KNTQ 现价（HYPE）</div><div class="v" id="price">—</div></div>
-    <div><div class="k">Elysium 溢价（对 HyperEVM）</div><div class="v" id="premium">—</div></div>
-    <div><div class="k">仓内 HYPE</div><div class="v" id="amt0">—</div></div>
-    <div><div class="k">仓内 KNTQ</div><div class="v" id="amt1">—</div></div>
-    <div><div class="k">入场价 / 入场市值</div><div class="v" id="entry">—</div></div>
-    <div><div class="k">开仓时间</div><div class="v" id="openedAt">—</div></div>
+<div class="header">
+  <div class="h-left">
+    <h1>Elysium LP 仓位 <span id="posTitle" class="pos-tag">· 加载中…</span></h1>
+    <div class="h-sub">自动跟随 LP 热钱包当前活跃仓位 · 平调仓自动识别切换 · 浏览器内独立读链</div>
   </div>
-  <div class="bar" id="bar" style="display:none"><div class="fill" id="barFill"></div><div class="dot" id="barDot"></div></div>
-  <div class="barlab" id="barLab" style="display:none"><span id="labLo"></span><span id="labMid">现价在区间中的位置</span><span id="labHi"></span></div>
-  <div class="err" id="err"></div>
+  <div class="h-right">
+    <span id="topBadge" class="top-badge b-none">读取中</span>
+  </div>
 </div>
 
-<div class="card">
-  <div class="row"><span>LP 钱包闲置 HYPE</span><span class="rv" id="wHype">—</span></div>
-  <div class="row"><span>LP 钱包闲置 KNTQ</span><span class="rv" id="wKntq">—</span></div>
-  <div class="row"><span>钱包地址</span><span class="rv" style="font-size:12px">0xA2eC…6f9a</span></div>
+<div class="statusbar" id="statusbar">
+  <span><span class="dot"></span><b id="status">连接中</b></span>
+  <span>最后刷新 <b id="lasttime">—</b></span>
+  <span>自动刷新 <b>20s</b></span>
+  <span>模式 <b>纯只读读链</b></span>
+  <span class="right">HYPE 参考价 <b id="hypeusd">—</b></span>
 </div>
 
-<div class="foot" id="foot">数据源：Elysium 官方 RPC 链上直读，每 20 秒刷新（页面切后台暂停）。<br>
-<span id="shells"></span></div>
+<div class="hero" id="hero">
+  <div class="badge" id="badge">仓位正在发现中…</div>
+  <div class="bignum" id="totalval">—</div>
+  <div class="herolabel" id="herolabel">仓位总价值（仓内资产 + 未领手续费）</div>
+  <div class="herosub">
+    <span>折 HYPE<b id="subHype">—</b></span>
+    <span>折合 USD<b id="subUsd">—</b></span>
+    <span>浮盈亏 (对入场)<b id="subPnl">—</b></span>
+    <span>未领手续费<b id="subFee">—</b></span>
+  </div>
+</div>
+
+<div class="rangecard" id="rangecard">
+  <h3>价格区间 <span class="tag" id="rangetag">出区间 = 停产 · 回区间自动恢复</span></h3>
+  <div class="track" id="track">
+    <div class="zone" id="zone"></div>
+    <div class="marker" id="marker"><div class="tip" id="markertip">—</div></div>
+  </div>
+  <div class="scalelabels"><span id="scalemin">—</span><span id="scalemax">—</span></div>
+  <div class="distrow">
+    <span>下限 <b id="lowerp">—</b></span>
+    <span>现价 <b id="curp">—</b></span>
+    <span>上限 <b id="upperp">—</b></span>
+    <span>距下限 <b id="distlo">—</b></span>
+    <span>距上限 <b id="disthi">—</b></span>
+  </div>
+</div>
+
+<div class="cards">
+  <div class="pcard">
+    <h4>未领取手续费 <span class="tag">链上精确计算</span></h4>
+    <div class="big" id="feeBig">— <small>HYPE 等值</small></div>
+    <div class="sub" id="feeSub">自开仓区块起累积 · 尚未收取</div>
+    <div class="row"><span>HYPE 手续费</span><b id="feeHype">—</b></div>
+    <div class="row"><span>KNTQ 手续费</span><b id="feeKntq">—</b></div>
+    <div class="row"><span>手续费折合 HYPE</span><b id="feeHypeEq">—</b></div>
+    <div class="row"><span>手续费折合 USD</span><b id="feeUsd">—</b></div>
+  </div>
+
+  <div class="pcard">
+    <h4>仓位构成与价格 <span class="tag">随价格实时变化</span></h4>
+    <div class="big" id="posHypeBig">— <small>HYPE 仓内</small></div>
+    <div class="sub" id="posUsdSub">≈ —</div>
+    <div class="row"><span>仓内 HYPE</span><b id="amt0">—</b></div>
+    <div class="row"><span>仓内 KNTQ</span><b id="amt1">—</b></div>
+    <div class="row"><span>KNTQ 现价</span><b id="curPrice">—</b></div>
+    <div class="row"><span>Elysium 溢价 (对 HyperEVM)</span><b id="premium">—</b></div>
+  </div>
+
+  <div class="pcard">
+    <h4>入场重构与基准 <span class="tag">Transfer 块 Slot0 精确回溯</span></h4>
+    <div class="big" id="entryBig">— <small>入场市值</small></div>
+    <div class="sub" id="entrySub">开仓成本基准</div>
+    <div class="row"><span>入场价</span><b id="entryPrice">—</b></div>
+    <div class="row"><span>入场市值</span><b id="entryValue">—</b></div>
+    <div class="row"><span>入场存入双边估算</span><b id="entryAmts">—</b></div>
+    <div class="row"><span>开仓时间</span><b id="openedAt">—</b></div>
+  </div>
+
+  <div class="pcard">
+    <h4>LP 热钱包余额 <span class="tag">0xA2eC…6f9a</span></h4>
+    <div class="big" id="balHypeBig">— <small>闲置 HYPE</small></div>
+    <div class="sub" id="balKntqSub">— 闲置 KNTQ</div>
+    <div class="row"><span>钱包闲置 HYPE</span><b id="balHype">—</b></div>
+    <div class="row"><span>钱包闲置 KNTQ</span><b id="balKntq">—</b></div>
+    <div class="row"><span>完整热钱包地址</span><b style="font-size:11.5px;font-family:monospace">0xA2eC4c3874640d18f97A1A6B2c725a371A426f9a</b></div>
+    <div class="row"><span>当前网络最新块</span><b id="latestBlock">—</b></div>
+  </div>
+</div>
+
+<div class="note">
+  <div class="shells" id="shells">钱包持有的其他 NFT：读取中…</div>
+  <div>本页为纯只读看板，绝不连接钱包、不签名、不发交易。所有数据由页面在浏览器内直接调用 Elysium 官方 RPC 与链上合约独立计算。自动每 20 秒刷新，页面切入后台自动暂停。</div>
+</div>
 
 <script>
 "use strict";
+
+// Contracts & Config
 const RPC = "https://rpc.elysium.kinetiq.xyz";
 const HYP_RPC = "https://rpc.hyperliquid.xyz/evm";
 const NPM = "0x1d1C51b9d07fD27d36412A2b66CC23D19Eb3E518";
@@ -80,232 +436,458 @@ const ALG = "0xC8e5EE73b80bb3f6c9b5348771De8217aBD412E7";
 const WALLET = "0xA2eC4c3874640d18f97A1A6B2c725a371A426f9a";
 const POOL_ID = "c96bfd21d36f8e7252f0d80fcb5f3bcacdf47c8b927b20711104713ebeb383ac";
 const TRANSFER_TOPIC = "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef";
-const SEL = { nextTokenId:"0x75794a3c", balanceOf:"0x70a08231", ownerOf:"0x6352211e",
-  getPosLiq:"0x1efeed33", getPoolPosInfo:"0x7ba03aad", getSlot0:"0xc815641c",
-  getFGInside:"0x53e9c1fb", getPosInfo:"0xdacf1d2f", globalState:"0xe76c01e4" };
+
+const SEL = {
+  nextTokenId: "0x75794a3c",
+  balanceOf: "0x70a08231",
+  ownerOf: "0x6352211e",
+  getPosLiq: "0x1efeed33",
+  getPoolPosInfo: "0x7ba03aad",
+  getSlot0: "0xc815641c",
+  getFGInside: "0x53e9c1fb",
+  getPosInfo: "0xdacf1d2f",
+  globalState: "0xe76c01e4"
+};
+
 const $ = id => document.getElementById(id);
-const pad = (h) => h.padStart(64, "0");
+const pad = h => h.padStart(64, "0");
 const encUint = n => pad(BigInt(n).toString(16));
 const encAddr = a => pad(a.slice(2).toLowerCase());
-const encI24 = n => pad((BigInt(n) & ((1n<<256n)-1n)).toString(16));
-const W = (hex, i) => BigInt("0x" + hex.slice(2 + i*64, 2 + (i+1)*64));
+const encI24 = n => pad((BigInt(n) & ((1n << 256n) - 1n)).toString(16));
+const W = (hex, i) => BigInt("0x" + hex.slice(2 + i * 64, 2 + (i + 1) * 64));
 const int24 = v => { v = v & 0xffffffn; return v >= 0x800000n ? Number(v - 0x1000000n) : Number(v); };
-const fmt = (x, d=4) => x.toLocaleString("en-US", {minimumFractionDigits:d, maximumFractionDigits:d});
+const fmt = (x, d = 4) => Number(x).toLocaleString("en-US", { minimumFractionDigits: d, maximumFractionDigits: d });
+const fmtUsd = x => "$" + fmt(x, 2);
+const signed = (x, d = 2, unit = "") => (x >= 0 ? "+" : "−") + fmt(Math.abs(x), d) + unit;
 
 let rpcId = 0;
 async function rpc(url, method, params) {
-  const r = await fetch(url, { method:"POST", headers:{"Content-Type":"application/json"},
-    body: JSON.stringify({jsonrpc:"2.0", id:++rpcId, method, params}) });
+  const r = await fetch(url, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ jsonrpc: "2.0", id: ++rpcId, method, params })
+  });
   const j = await r.json();
   if (j.error) throw new Error(j.error.message || method);
   return j.result;
 }
-async function rpcBatch(calls) { // calls: [{method, params}] all on Ely RPC; falls back to singles
+
+async function rpcBatch(calls) {
   try {
-    const body = calls.map(c => ({jsonrpc:"2.0", id:++rpcId, method:c.method, params:c.params}));
-    const r = await fetch(RPC, { method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify(body) });
+    const body = calls.map(c => ({ jsonrpc: "2.0", id: ++rpcId, method: c.method, params: c.params }));
+    const r = await fetch(RPC, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body)
+    });
     const j = await r.json();
     if (!Array.isArray(j)) throw new Error("no batch");
-    const byId = {}; j.forEach(x => byId[x.id] = x);
-    return body.map(b => { const x = byId[b.id]; if (!x || x.error) throw new Error("batch item"); return x.result; });
+    const byId = {};
+    j.forEach(x => { if (x && x.id) byId[x.id] = x; });
+    return body.map(b => {
+      const item = byId[b.id];
+      if (!item || item.error) return null;
+      return item.result;
+    });
   } catch (e) {
     const out = [];
-    for (const c of calls) out.push(await rpc(RPC, c.method, c.params));
+    for (const c of calls) {
+      try { out.push(await rpc(RPC, c.method, c.params)); }
+      catch (err) { out.push(null); }
+    }
     return out;
   }
 }
-const call = (to, data, block="latest") => rpc(RPC, "eth_call", [{to, data}, block]);
 
-// ---------- position discovery (generic: follows whatever position is live) ----------
-let ownedCache = null;      // [{id, liq(BigInt), tl, tu, mainPool}]
+const call = (to, data, block = "latest") => rpc(RPC, "eth_call", [{ to, data }, block]);
+
+// Position Discovery & Cache
+let ownedCache = [];
 let activeId = null;
-let deepScanned = false;
+let lastOkAt = 0;
+let lastKnownNextId = 0;
+const descCache = {}; // id -> { id, liq, tl, tu, mainPool }
 
-async function scanDown(fromId, toId) { // returns list of ids owned by wallet in [toId..fromId]
+async function scanDown(fromId, toId) {
   const owned = [];
-  for (let hi = fromId; hi >= toId; hi -= 40) {
-    const lo = Math.max(toId, hi - 39);
+  for (let hi = fromId; hi >= toId; hi -= 30) {
+    const lo = Math.max(toId, hi - 29);
     const calls = [];
-    for (let id = hi; id >= lo; id--) calls.push({method:"eth_call",
-      params:[{to:NPM, data:SEL.ownerOf + encUint(id)}, "latest"]});
+    for (let id = hi; id >= lo; id--) {
+      calls.push({ method: "eth_call", params: [{ to: NPM, data: SEL.ownerOf + encUint(id) }, "latest"] });
+    }
     const res = await rpcBatch(calls);
-    res.forEach((r, i) => { if (("0x" + r.slice(-40)).toLowerCase() === WALLET.toLowerCase()) owned.push(hi - i); });
+    res.forEach((r, i) => {
+      if (r && typeof r === "string" && ("0x" + r.slice(-40)).toLowerCase() === WALLET.toLowerCase()) {
+        owned.push(hi - i);
+      }
+    });
   }
   return owned;
 }
+
 async function describePos(id) {
+  if (descCache[id] && descCache[id].liq === 0n) return descCache[id];
   const [liqHex, infoHex] = await rpcBatch([
-    {method:"eth_call", params:[{to:NPM, data:SEL.getPosLiq + encUint(id)}, "latest"]},
-    {method:"eth_call", params:[{to:NPM, data:SEL.getPoolPosInfo + encUint(id)}, "latest"]}]);
+    { method: "eth_call", params: [{ to: NPM, data: SEL.getPosLiq + encUint(id) }, "latest"] },
+    { method: "eth_call", params: [{ to: NPM, data: SEL.getPoolPosInfo + encUint(id) }, "latest"] }
+  ]);
+  if (!infoHex || infoHex.length < 2 + 6 * 64) {
+    return { id, liq: 0n, tl: 0, tu: 0, mainPool: false };
+  }
   const c1 = "0x" + infoHex.slice(2 + 64, 2 + 128).slice(-40);
   const fee = Number(W(infoHex, 2)), spacing = Number(W(infoHex, 3));
   const info = W(infoHex, 5);
-  return { id, liq: BigInt(liqHex),
-           tl: int24(info >> 8n), tu: int24(info >> 32n),
-           mainPool: c1.toLowerCase() === KNTQ.toLowerCase() && fee === 10000 && spacing === 200 };
-}
-async function discover() {
-  const [nextHex, balHex] = await rpcBatch([
-    {method:"eth_call", params:[{to:NPM, data:SEL.nextTokenId}, "latest"]},
-    {method:"eth_call", params:[{to:NPM, data:SEL.balanceOf + encAddr(WALLET)}, "latest"]}]);
-  const nextId = Number(BigInt(nextHex)), balance = Number(BigInt(balHex));
-  if (balance === 0) { ownedCache = []; activeId = null; return; }
-  // Phase A: scan every id above the known active one (a new position always
-  // has a higher id), plus a small look-back when nothing is active.
-  const floorA = activeId ? activeId : Math.max(1, nextId - 300);
-  let found = await scanDown(nextId - 1, floorA);
-  // Phase B (once per session): deep scan for older shells below the window.
-  if (!deepScanned) {
-    if (found.length < balance && floorA > 1) {
-      const rest = await scanDown(floorA - 1, 1);
-      found = found.concat(rest);
-    }
-    deepScanned = true;
-  }
-  // Re-verify ownership of cached ids this round's scan did not cover.
-  const cachedIds = (ownedCache || []).map(p => p.id).filter(id => !found.includes(id) && id < floorA);
-  if (cachedIds.length) {
-    const res = await rpcBatch(cachedIds.map(id => ({method:"eth_call",
-      params:[{to:NPM, data:SEL.ownerOf + encUint(id)}, "latest"]})));
-    res.forEach((r, i) => { if (("0x" + r.slice(-40)).toLowerCase() === WALLET.toLowerCase()) found.push(cachedIds[i]); });
-  }
-  let ids = [...new Set(found)].sort((a,b) => b - a).slice(0, balance + 5);
-  ownedCache = [];
-  for (const id of ids) { try { ownedCache.push(await describePos(id)); } catch(e) {} }
-  const act = ownedCache.find(p => p.mainPool && p.liq > 0n);
-  activeId = act ? act.id : null;
+  const out = {
+    id,
+    liq: liqHex ? BigInt(liqHex) : 0n,
+    tl: int24(info >> 8n),
+    tu: int24(info >> 32n),
+    mainPool: c1.toLowerCase() === KNTQ.toLowerCase() && fee === 10000 && spacing === 200
+  };
+  descCache[id] = out;
+  return out;
 }
 
-// ---------- entry (mint) lookup ----------
-const entryCache = {}; // tokenId -> {block, ts, q, a0, a1, value}
+async function discover() {
+  const [nextHex, balHex] = await rpcBatch([
+    { method: "eth_call", params: [{ to: NPM, data: SEL.nextTokenId }, "latest"] },
+    { method: "eth_call", params: [{ to: NPM, data: SEL.balanceOf + encAddr(WALLET) }, "latest"] }
+  ]);
+  const nextId = Number(BigInt(nextHex || "0x0")), balance = Number(BigInt(balHex || "0x0"));
+  if (balance === 0) {
+    ownedCache = [];
+    activeId = null;
+    return;
+  }
+
+  // Fast path: if active position is already known, nextId hasn't changed, and position is still active
+  if (ownedCache.length && lastKnownNextId === nextId && activeId) {
+    const curLiqHex = await call(NPM, SEL.getPosLiq + encUint(activeId)).catch(() => null);
+    if (curLiqHex) {
+      const curLiq = BigInt(curLiqHex);
+      const cur = ownedCache.find(p => p.id === activeId);
+      if (cur) cur.liq = curLiq;
+      if (curLiq > 0n) return; // Still active, skip full scan
+    }
+  }
+
+  let found = [];
+  try {
+    const logs = await rpc(RPC, "eth_getLogs", [{
+      address: NPM, fromBlock: "0x0", toBlock: "latest",
+      topics: [TRANSFER_TOPIC, null, "0x" + encAddr(WALLET)]
+    }]);
+    if (logs && Array.isArray(logs)) {
+      logs.forEach(l => {
+        if (l.topics && l.topics[3]) found.push(Number(BigInt(l.topics[3])));
+      });
+    }
+  } catch (e) {}
+
+  const maxKnown = found.length ? Math.max(...found) : 0;
+  const scanTop = nextId - 1;
+  const scanFloor = maxKnown > 0 ? maxKnown + 1 : Math.max(1, nextId - 50);
+  if (scanTop >= scanFloor) {
+    const newlyFound = await scanDown(scanTop, scanFloor);
+    found = found.concat(newlyFound);
+  }
+
+  let ids = [...new Set(found)].sort((a, b) => b - a);
+  if (ids.length === 0) {
+    ids = await scanDown(nextId - 1, Math.max(1, nextId - 100));
+  }
+
+  const described = [];
+  for (const id of ids) {
+    try {
+      described.push(await describePos(id));
+      await new Promise(r => setTimeout(r, 50));
+    } catch (e) {}
+  }
+  ownedCache = described;
+  const act = ownedCache.find(p => p.mainPool && p.liq > 0n);
+  activeId = act ? act.id : null;
+  lastKnownNextId = nextId;
+}
+
+// Entry lookup
+const entryCache = {};
 async function findEntry(pos) {
   if (entryCache[pos.id]) return entryCache[pos.id];
-  const tip = Number(BigInt(await rpc(RPC, "eth_blockNumber", [])));
-  let mintBlock = null;
-  const topics = [TRANSFER_TOPIC, "0x" + "0".repeat(64), "0x" + encAddr(WALLET), "0x" + encUint(pos.id)];
-  for (let hi = tip; hi > 0 && mintBlock === null; hi -= 250000) {
-    const lo = Math.max(0, hi - 249999);
+  let mintBlock = null, blkTs = null;
+  try {
+    const logs = await rpc(RPC, "eth_getLogs", [{
+      address: NPM, fromBlock: "0x0", toBlock: "latest",
+      topics: [TRANSFER_TOPIC, "0x" + "0".repeat(64), "0x" + encAddr(WALLET), "0x" + encUint(pos.id)]
+    }]);
+    if (logs && logs.length) {
+      mintBlock = Number(BigInt(logs[0].blockNumber));
+      if (logs[0].blockTimestamp) blkTs = Number(BigInt(logs[0].blockTimestamp));
+    }
+  } catch (e) {}
+
+  if (!mintBlock) return null;
+  if (!blkTs) {
     try {
-      const logs = await rpc(RPC, "eth_getLogs", [{address:NPM, fromBlock:"0x"+lo.toString(16),
-        toBlock:"0x"+hi.toString(16), topics}]);
-      if (logs && logs.length) mintBlock = Number(BigInt(logs[0].blockNumber));
-    } catch(e) { break; }
+      const blk = await rpc(RPC, "eth_getBlockByNumber", ["0x" + mintBlock.toString(16), false]);
+      blkTs = Number(BigInt(blk.timestamp));
+    } catch (e) {
+      blkTs = Math.floor(Date.now() / 1000);
+    }
   }
-  if (mintBlock === null) return null;
-  const blk = await rpc(RPC, "eth_getBlockByNumber", ["0x" + mintBlock.toString(16), false]);
-  const s0 = await call(SV, SEL.getSlot0 + POOL_ID, "0x" + mintBlock.toString(16));
-  const s = Number(W(s0, 0)) / 2**96;
-  const q = 1 / (s * s);
-  const [a0, a1] = amounts(Number(pos.liq), s, pos.tl, pos.tu);
-  const out = { block: mintBlock, ts: Number(BigInt(blk.timestamp)), q, a0, a1, value: a0 + a1 * q };
+
+  const s0Mint = await call(SV, SEL.getSlot0 + POOL_ID, "0x" + mintBlock.toString(16));
+  const sMint = Number(W(s0Mint, 0)) / (2 ** 96);
+  const qMint = 1 / (sMint * sMint);
+  const [a0Mint, a1Mint] = amounts(Number(pos.liq), sMint, pos.tl, pos.tu);
+  const out = {
+    block: mintBlock,
+    ts: blkTs,
+    q: qMint,
+    a0: a0Mint,
+    a1: a1Mint,
+    value: a0Mint + a1Mint * qMint
+  };
   entryCache[pos.id] = out;
   return out;
 }
 
-// ---------- math ----------
-function amounts(L, s, tl, tu) { // returns [HYPE, KNTQ] in whole units
+// Math
+function amounts(L, s, tl, tu) {
   const sA = Math.pow(1.0001, tl / 2), sB = Math.pow(1.0001, tu / 2);
   let a0, a1;
-  if (s <= sA)      { a0 = L * (1/sA - 1/sB); a1 = 0; }
+  if (s <= sA)      { a0 = L * (1 / sA - 1 / sB); a1 = 0; }
   else if (s >= sB) { a0 = 0; a1 = L * (sB - sA); }
-  else              { a0 = L * (1/s - 1/sB); a1 = L * (s - sA); }
+  else              { a0 = L * (1 / s - 1 / sB); a1 = L * (s - sA); }
   return [a0 / 1e18, a1 / 1e18];
 }
-async function hypeUsd() {
-  const r = await fetch("https://api.hyperliquid.xyz/info", { method:"POST",
-    headers:{"Content-Type":"application/json"}, body: JSON.stringify({type:"allMids"}) });
-  const j = await r.json();
-  return parseFloat(j.HYPE);
+
+async function fetchHypeUsd() {
+  try {
+    const r = await fetch("https://api.hyperliquid.xyz/info", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ type: "allMids" })
+    });
+    const j = await r.json();
+    if (j && j.HYPE) return parseFloat(j.HYPE);
+  } catch (e) {}
+  return null;
 }
 
-// ---------- main refresh ----------
-let busy = false;
+let isRefreshing = false;
 async function refresh() {
-  if (busy || document.hidden) return;
-  busy = true;
+  if (isRefreshing || document.hidden) return;
+  isRefreshing = true;
+
   try {
     await discover();
-    const shells = (ownedCache || []).filter(p => !(p.mainPool && p.liq > 0n));
-    $("shells").textContent = shells.length ?
-      "钱包另持有 NFT：" + shells.map(p => "#" + p.id + (p.liq > 0n ? "（其他池）" : "（已平仓）")).join("、") : "";
-    const pos = (ownedCache || []).find(p => p.mainPool && p.liq > 0n);
-    // wallet balances always
-    const [balHex, kntqHex, usd] = await Promise.all([
+
+    const shells = ownedCache.filter(p => !(p.mainPool && p.liq > 0n));
+    $("shells").textContent = shells.length
+      ? "钱包另持有 NFT：" + shells.map(p => "#" + p.id + (p.liq > 0n ? "（其他池）" : "（已平仓空壳）")).join("、")
+      : "钱包暂无其他 NFT 仓位";
+
+    const [balHex, kntqHex, usdPrice, tipHex] = await Promise.all([
       rpc(RPC, "eth_getBalance", [WALLET, "latest"]),
       call(KNTQ, SEL.balanceOf + encAddr(WALLET)),
-      hypeUsd().catch(() => null)]);
-    $("wHype").textContent = fmt(Number(BigInt(balHex)) / 1e18) + " HYPE";
-    $("wKntq").textContent = fmt(Number(BigInt(kntqHex)) / 1e18, 2) + " KNTQ";
-    const tip = Number(BigInt(await rpc(RPC, "eth_blockNumber", [])));
-    $("meta").textContent = "更新 " + new Date().toLocaleTimeString("zh-CN") + " · 块 " + tip.toLocaleString();
+      fetchHypeUsd(),
+      rpc(RPC, "eth_blockNumber", []).catch(() => "0x0")
+    ]);
+
+    const balHype = Number(BigInt(balHex || "0x0")) / 1e18;
+    const balKntq = Number(BigInt(kntqHex || "0x0")) / 1e18;
+    const currentBlock = Number(BigInt(tipHex || "0x0"));
+
+    $("balHypeBig").innerHTML = fmt(balHype) + ' <small>HYPE</small>';
+    $("balKntqSub").textContent = fmt(balKntq, 2) + " KNTQ 闲置";
+    $("balHype").textContent = fmt(balHype) + " HYPE";
+    $("balKntq").textContent = fmt(balKntq, 2) + " KNTQ";
+    $("latestBlock").textContent = currentBlock > 0 ? currentBlock.toLocaleString() : "—";
+    if (usdPrice) $("hypeusd").textContent = fmtUsd(usdPrice);
+
+    const pos = ownedCache.find(p => p.mainPool && p.liq > 0n);
+
+    // Empty state: no active position
     if (!pos) {
-      $("posTitle").textContent = "";
-      $("statusBadge").className = "badge b-none"; $("statusBadge").textContent = "当前无仓位";
-      $("rangeTxt").textContent = ""; $("totalHype").textContent = "—"; $("totalUsd").textContent = "";
-      ["pnl","fees","price","premium","amt0","amt1","entry","openedAt"].forEach(i => $(i).textContent = "—");
-      $("bar").style.display = "none"; $("barLab").style.display = "none";
-      $("err").textContent = ""; busy = false; return;
+      $("posTitle").textContent = "· 当前无有效仓位";
+      $("topBadge").className = "top-badge b-none";
+      $("topBadge").textContent = "当前无仓位";
+      $("hero").className = "hero none";
+      $("badge").textContent = "当前未检测到主池活跃 LP 仓位";
+      $("totalval").textContent = "—";
+      $("herolabel").textContent = "主池流动性为 0 或未持仓";
+      ["subHype", "subUsd", "subPnl", "subFee"].forEach(i => $(i).textContent = "—");
+      $("rangetag").textContent = "暂无活跃仓位";
+      $("track").style.opacity = "0.3";
+      $("zone").style.width = "0%";
+      $("marker").style.display = "none";
+      ["scalemin", "scalemax", "lowerp", "curp", "upperp", "distlo", "disthi"].forEach(i => $(i).textContent = "—");
+      ["feeBig", "feeSub", "feeHype", "feeKntq", "feeHypeEq", "feeUsd",
+       "posHypeBig", "posUsdSub", "amt0", "amt1", "curPrice", "premium",
+       "entryBig", "entrySub", "entryPrice", "entryValue", "entryAmts", "openedAt"].forEach(i => $(i).textContent = "—");
+
+      lastOkAt = Date.now();
+      $("statusbar").classList.remove("stale");
+      $("status").textContent = "已连接";
+      $("lasttime").textContent = new Date().toLocaleTimeString("zh-CN", { hour12: false });
+      isRefreshing = false;
+      return;
     }
+
+    // Active position detected
     $("posTitle").textContent = "· 仓位 #" + pos.id;
+    $("track").style.opacity = "1";
+    $("marker").style.display = "block";
+
     const L = Number(pos.liq);
     const [s0, fgNow, posInfo, gs] = await Promise.all([
       call(SV, SEL.getSlot0 + POOL_ID),
       call(SV, SEL.getFGInside + POOL_ID + encI24(pos.tl) + encI24(pos.tu)),
       call(SV, SEL.getPosInfo + POOL_ID + encAddr(NPM) + encI24(pos.tl) + encI24(pos.tu) + encUint(pos.id)),
-      rpc(HYP_RPC, "eth_call", [{to:ALG, data:SEL.globalState}, "latest"]).catch(() => null)]);
+      rpc(HYP_RPC, "eth_call", [{ to: ALG, data: SEL.globalState }, "latest"]).catch(() => null)
+    ]);
+
     const sqrtP = W(s0, 0), tick = int24(W(s0, 1));
-    const s = Number(sqrtP) / 2**96, q = 1 / (s * s);
+    const s = Number(sqrtP) / (2 ** 96);
+    const q = 1 / (s * s); // HYPE per KNTQ
     const [a0, a1] = amounts(L, s, pos.tl, pos.tu);
     const valueHype = a0 + a1 * q;
-    // uncollected fees (exact: feeGrowthInside now vs position's last)
+
+    // Uncollected fees
     const fg0n = W(fgNow, 0), fg1n = W(fgNow, 1);
     const fg0l = W(posInfo, 1), fg1l = W(posInfo, 2);
-    const M = (1n << 256n);
+    const M = 1n << 256n;
     const fee0 = Number(((fg0n - fg0l + M) % M) * pos.liq / (1n << 128n)) / 1e18;
     const fee1 = Number(((fg1n - fg1l + M) % M) * pos.liq / (1n << 128n)) / 1e18;
     const feesHype = fee0 + fee1 * q;
-    const total = valueHype + feesHype;
-    $("totalHype").textContent = fmt(total);
-    $("totalUsd").textContent = usd ? "$" + fmt(total * usd, 2) : "";
-    $("fees").innerHTML = fmt(fee0) + " <small>HYPE + </small>" + fmt(fee1, 2) + " <small>KNTQ</small>";
-    $("price").textContent = q.toFixed(6);
+    const totalHype = valueHype + feesHype;
+
+    // HyperEVM premium
+    let prem = null;
+    if (gs && gs.length >= 66) {
+      const sh = Number(W(gs, 0)) / (2 ** 96);
+      const hypQ = sh * sh;
+      prem = (q / hypQ - 1) * 100;
+      $("premium").textContent = (prem >= 0 ? "+" : "") + prem.toFixed(2) + "%";
+      $("premium").className = prem >= 0 ? "pos" : "neg";
+    } else {
+      $("premium").textContent = "—";
+      $("premium").className = "";
+    }
+
+    // In-range calculation
+    const inRange = tick >= pos.tl && tick < pos.tu;
+    const sA = Math.pow(1.0001, pos.tl / 2), sB = Math.pow(1.0001, pos.tu / 2);
+    const pLo = 1 / (sB * sB), pHi = 1 / (sA * sA);
+
+    $("hero").className = "hero " + (inRange ? "in" : "out");
+    $("topBadge").className = "top-badge " + (inRange ? "b-in" : "b-out");
+    if (inRange) {
+      $("topBadge").textContent = "区间内";
+      $("badge").textContent = "仓位 #" + pos.id + " · Uniswap V4 · 区间内 · 正在赚手续费";
+    } else if (tick >= pos.tu) {
+      $("topBadge").textContent = "已出区间（下）";
+      $("badge").textContent = "仓位 #" + pos.id + " · 已出区间（下）· 全部为 KNTQ";
+    } else {
+      $("topBadge").textContent = "已出区间（上）";
+      $("badge").textContent = "仓位 #" + pos.id + " · 已出区间（上）· 全部为 HYPE";
+    }
+
+    // Hero Core Numbers
+    $("totalval").innerHTML = fmt(totalHype) + ' <small>HYPE</small>';
+    $("herolabel").textContent = usdPrice
+      ? "仓位总价值 ≈ " + fmtUsd(totalHype * usdPrice) + "（仓内资产 + 未领手续费）"
+      : "仓位总价值（仓内资产 + 未领手续费）";
+    $("subHype").textContent = fmt(totalHype) + " HYPE";
+    $("subUsd").textContent = usdPrice ? "≈ " + fmtUsd(totalHype * usdPrice) : "—";
+    $("subFee").textContent = fmt(fee0, 5) + " HYPE + " + fmt(fee1, 2) + " KNTQ (折 " + fmt(feesHype) + " HYPE)";
+
+    // Range visual bar (log scale)
+    const lo = Math.log(pLo * 0.7), hi = Math.log(pHi * 1.4);
+    const X = p => Math.min(Math.max((Math.log(p) - lo) / (hi - lo) * 100, 0), 100);
+    $("zone").style.left = X(pLo) + "%";
+    $("zone").style.width = Math.max(X(pHi) - X(pLo), 1) + "%";
+    $("marker").style.left = "calc(" + X(q) + "% - 1.5px)";
+    $("markertip").textContent = q.toFixed(6) + " HYPE";
+    $("scalemin").textContent = (pLo * 0.7).toFixed(6);
+    $("scalemax").textContent = (pHi * 1.4).toFixed(6);
+    $("lowerp").textContent = pLo.toFixed(6);
+    $("curp").textContent = q.toFixed(6);
+    $("upperp").textContent = pHi.toFixed(6);
+    $("distlo").textContent = signed((q / pLo - 1) * 100, 1, "%");
+    $("disthi").textContent = signed((q / pHi - 1) * 100, 1, "%");
+    $("rangetag").textContent = inRange ? "区间内 (tick " + pos.tl + " ~ " + pos.tu + ")" : "出区间 · 停产中";
+
+    // Card 1: Fees
+    $("feeBig").innerHTML = fmt(feesHype) + ' <small>HYPE 等值</small>';
+    $("feeSub").textContent = usdPrice
+      ? "≈ " + fmtUsd(feesHype * usdPrice) + " · 自开仓起累计尚未领取"
+      : "自开仓起累计尚未领取";
+    $("feeHype").textContent = fmt(fee0, 6) + " HYPE";
+    $("feeKntq").textContent = fmt(fee1, 2) + " KNTQ";
+    $("feeHypeEq").textContent = fmt(feesHype, 6) + " HYPE";
+    $("feeUsd").textContent = usdPrice ? fmtUsd(feesHype * usdPrice) : "—";
+
+    // Card 2: Position Composition & Price
+    $("posHypeBig").innerHTML = fmt(valueHype) + ' <small>HYPE 仓内</small>';
+    $("posUsdSub").textContent = usdPrice ? "≈ " + fmtUsd(valueHype * usdPrice) : "—";
     $("amt0").textContent = fmt(a0) + " HYPE";
     $("amt1").textContent = fmt(a1, 2) + " KNTQ";
-    if (gs) {
-      const sh = Number(W(gs, 0)) / 2**96;
-      const hypQ = sh * sh;
-      const prem = (q / hypQ - 1) * 100;
-      $("premium").textContent = (prem >= 0 ? "+" : "") + prem.toFixed(2) + "%";
-      $("premium").className = "v " + (prem >= 0 ? "up" : "down");
-    }
-    const inRange = tick >= pos.tl && tick < pos.tu;
-    $("statusBadge").className = "badge " + (inRange ? "b-in" : "b-out");
-    $("statusBadge").textContent = inRange ? "区间内 · 正在赚手续费" : (tick < pos.tl ? "已出区间（下）· 全部为 KNTQ" : "已出区间（上）· 全部为 HYPE");
-    const qLo = Math.pow(1.0001, -pos.tu), qHi = Math.pow(1.0001, -pos.tl);
-    $("rangeTxt").textContent = "区间 " + qLo.toFixed(6) + " – " + qHi.toFixed(6) + " HYPE/KNTQ";
-    const pctPos = Math.min(100, Math.max(0, (tick - pos.tl) / (pos.tu - pos.tl) * 100));
-    $("bar").style.display = "block"; $("barLab").style.display = "flex";
-    $("barFill").style.left = "0%"; $("barFill").style.width = "100%";
-    $("barDot").style.left = pctPos + "%";
-    $("labLo").textContent = qHi.toFixed(4) + "（tick " + pos.tl + "）";
-    $("labHi").textContent = qLo.toFixed(4) + "（tick " + pos.tu + "）";
+    $("curPrice").textContent = q.toFixed(6) + " HYPE";
+
+    // Card 3: Entry reconstruction & PnL
     const ent = await findEntry(pos).catch(() => null);
     if (ent) {
-      const pnl = total - ent.value, pnlPct = pnl / ent.value * 100;
-      $("pnl").innerHTML = (pnl >= 0 ? "+" : "") + fmt(pnl) + " <small>HYPE (" + (pnl >= 0 ? "+" : "") + pnlPct.toFixed(2) + "%)</small>";
-      $("pnl").className = "v " + (pnl >= 0 ? "up" : "down");
-      $("entry").innerHTML = ent.q.toFixed(6) + " <small>/ </small>" + fmt(ent.value) + " <small>HYPE</small>";
-      $("openedAt").textContent = new Date(ent.ts * 1000).toLocaleString("zh-CN", {hour12:false});
-    } else { $("pnl").textContent = "—"; $("entry").textContent = "—"; $("openedAt").textContent = "—"; }
-    $("err").textContent = "";
-  } catch (e) {
-    $("err").textContent = "本轮读取失败（节点繁忙），自动重试中…";
+      const pnlHype = totalHype - ent.value;
+      const pnlPct = ent.value > 0 ? (pnlHype / ent.value) * 100 : 0;
+      $("subPnl").innerHTML = '<span class="' + (pnlHype >= 0 ? "pos" : "neg") + '">' +
+        (pnlHype >= 0 ? "+" : "−") + fmt(Math.abs(pnlHype)) + " HYPE (" + signed(pnlPct, 2, "%") + ")</span>";
+      $("entryBig").innerHTML = fmt(ent.value) + ' <small>HYPE</small>';
+      $("entrySub").textContent = usdPrice ? "开仓基准市值 ≈ " + fmtUsd(ent.value * usdPrice) : "开仓成本基准";
+      $("entryPrice").textContent = ent.q.toFixed(6) + " HYPE";
+      $("entryValue").textContent = fmt(ent.value) + " HYPE";
+      $("entryAmts").textContent = fmt(ent.a0) + " HYPE + " + fmt(ent.a1, 2) + " KNTQ";
+      $("openedAt").textContent = new Date(ent.ts * 1000).toLocaleString("zh-CN", { hour12: false }) + "（块 " + ent.block + "）";
+    } else {
+      $("subPnl").textContent = "—";
+      $("entryBig").textContent = "—";
+      $("entrySub").textContent = "成本基准未查到";
+      $("entryPrice").textContent = "—";
+      $("entryValue").textContent = "—";
+      $("entryAmts").textContent = "—";
+      $("openedAt").textContent = "—";
+    }
+
+    lastOkAt = Date.now();
+    $("statusbar").classList.remove("stale");
+    $("status").textContent = "已连接";
+    $("lasttime").textContent = new Date().toLocaleTimeString("zh-CN", { hour12: false });
+  } catch (err) {
+    if (lastOkAt && Date.now() - lastOkAt > 40000) {
+      $("statusbar").classList.add("stale");
+      $("status").textContent = "数据过期 (节点繁忙)";
+    }
+  } finally {
+    isRefreshing = false;
   }
-  busy = false;
 }
+
+// Watchdog timer
+setInterval(() => {
+  if (lastOkAt && Date.now() - lastOkAt > 40000) {
+    $("statusbar").classList.add("stale");
+    $("status").textContent = "数据过期";
+  }
+}, 1000);
+
+// Init & intervals
 refresh();
 setInterval(refresh, 20000);
-document.addEventListener("visibilitychange", () => { if (!document.hidden) refresh(); });
+document.addEventListener("visibilitychange", () => {
+  if (!document.hidden) refresh();
+});
 </script>
 </body>
 </html>
